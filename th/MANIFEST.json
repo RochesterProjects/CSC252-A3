@@ -1,0 +1,1 @@
+{"type": "secondary", "version": 1, "sets": {"in": ["test_helper.c", "test_helper.h"]}, "name": "th", "signature": "9a631e019fbbe4610d1b0b20ac372c55f70ba84c413350c6358897604a04a9fb676606c4cee54d2f60311b407ca52c5117d82fb5143a7d0eed9909af82c37102", "pubkey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAargaYqITMfPpjrceiYOTKN+OBu5RXkbHA/vh1QJFZcw=\n-----END PUBLIC KEY-----\n"}
