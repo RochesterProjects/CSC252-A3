@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "dbll.h"
 
 /* Routines to create and manipulate a doubly-linked list */
@@ -7,7 +8,16 @@
 /* returns an empty list or NULL if memory allocation failed */
 struct dbll *dbll_create()
 {
-  return NULL;
+  struct dbll* this = (struct dbll*)malloc(sizeof(struct dbll));
+  if(this == NULL){
+    return NULL;
+  }
+  //struct llnode *toFirst = (struct llnode*)malloc(sizeof(struct llnode));
+ // struct llnode *toLast = (struct llnode*)malloc(sizeof(struct llnode));
+  this->first = NULL;
+  this->last = NULL;
+
+  return this;
 }
 
 /* frees all memory associated with a doubly-linked list */
@@ -15,7 +25,14 @@ struct dbll *dbll_create()
 /* assumes user data has already been freed */
 void dbll_free(struct dbll *list)
 {
-
+  struct llnode *curr = list->first;
+  while(curr != list->last){
+    struct llnode *next = curr->next;
+    free(curr);
+    curr = next;
+  }
+  free(list->last);
+  free(list);
 }
 
 /* iterate over items stored in a doubly-linked list */
@@ -40,8 +57,37 @@ int dbll_iterate(struct dbll *list,
 				 void *ctx,
 				 int (*f)(struct dbll *, struct llnode *, void *))
 {
-  return -1;
-}
+  if(start == NULL){
+    start = list->first;
+  }
+  if(end == NULL){
+    end = list->last;
+  }
+ struct llnode *curr = start;
+ int result;
+  while(curr != end){
+    if(f != NULL){
+      result = (*f)(list,curr,ctx);
+      if(result == 0){
+        return 1;
+      }
+    }
+    if(&curr == &(list->last)){
+      return 0;
+    }
+    curr = curr->next;
+    }
+    if(f != NULL){
+    result = f(list,curr,ctx);
+    if(result == 0){
+      return 1;
+    }
+  }
+    return 1;
+    
+  }
+  
+
 
 /* similar to dbll_iterate, except that the list is traversed using
    the prev pointer of each node (i.e. in the reverse direction).
@@ -59,7 +105,33 @@ int dbll_iterate_reverse(struct dbll *list,
 						 int (*f)(struct dbll *, struct llnode *, void *)
 						 )
 {
-  return -1;
+  if(start == NULL){
+    start = list->last;
+  }
+  if(end == NULL){
+    end = list->first;
+  }
+  struct llnode *curr = start;
+  int result;
+  while(curr != end){
+    if(f != NULL){
+      result = (*f)(list,curr,ctx);
+      if(result == 0){
+        return 1;
+      }
+    }
+    if(&curr == &(list->first)){
+      return 0;
+    }
+    curr = curr->prev;
+    }
+    if(f != NULL){
+    result = f(list,curr,ctx);
+    if(result == 0){
+      return 1;
+    }
+  }
+  return 1;
 }
 
 
@@ -68,6 +140,37 @@ int dbll_iterate_reverse(struct dbll *list,
 /* You can assume user_data will be freed by somebody else (or has already been freed) */
 void dbll_remove(struct dbll *list, struct llnode *node)
 {
+  if(list->first == node && list->last == node){
+    list->first = NULL;
+    list->last = NULL;
+    free(node);
+    return;
+  }
+  if(list->first == node){
+    list->first = list->first->next;
+    list->first->prev =NULL;
+    free(node);
+    return;
+  }
+  if(list->last == node){
+    list->last = list->last->prev;
+    list->last->next = NULL;
+    free(node);
+    return;
+  }
+  else{
+  
+    struct llnode *temp = node->next;
+    temp->prev = node->prev;
+    temp->next = node->next->next;
+    node->prev->next = temp;
+    node->next->prev = temp->prev;
+
+  }
+ 
+
+  free(node);
+  return;
   
 }
 
@@ -77,7 +180,63 @@ void dbll_remove(struct dbll *list, struct llnode *node)
 /* return NULL if memory could not be allocated */
 struct llnode *dbll_insert_after(struct dbll *list, struct llnode *node, void *user_data)
 {
-  return NULL;
+   struct llnode *toInsert = malloc(sizeof(struct llnode));
+  if(toInsert == NULL){
+    return NULL;
+  }
+  toInsert->user_data = user_data;
+
+  if(node == NULL){
+    struct llnode *temp = malloc(sizeof(struct llnode));
+    temp = list->last;
+    if(list->last !=NULL){
+     temp->next = toInsert;
+    }
+   
+    toInsert->prev = temp;
+
+    list->last = toInsert;
+    list->last->prev = temp;
+
+    if(list->first == NULL){
+      list->first = toInsert;
+      list->first->next = NULL;
+    }
+    return toInsert;
+  }
+  else if (node == list->first){
+    struct llnode *temp = malloc(sizeof(struct llnode));
+      temp = list->first->next;
+      if(temp != NULL){
+        temp->next = list->last;
+        temp->prev = toInsert;
+      }
+      toInsert->next = temp;
+      toInsert->prev = list->first;
+      list->first->next = toInsert;    
+     return toInsert;
+}
+    else{
+    struct llnode *temp = malloc(sizeof(struct llnode));
+    //printf("hrer\n");
+    temp = node->next;
+    temp->prev = toInsert;
+    toInsert->next = temp;
+    node->next = toInsert;
+    toInsert->prev = node;
+    
+    
+   // temp->prev = toInsert->next;
+
+    //node->next->prev = toInsert;
+   
+   free(temp);
+   
+   
+
+  }
+    
+  return toInsert;
 }
 
 /* Create and return a new node containing `user_data` */
@@ -86,7 +245,48 @@ struct llnode *dbll_insert_after(struct dbll *list, struct llnode *node, void *u
 /* return NULL if memory could not be allocated */
 struct llnode *dbll_insert_before(struct dbll *list, struct llnode *node, void *user_data)
 {
-  return NULL;
+  struct llnode *toInsert = malloc(sizeof(struct llnode));
+  if(toInsert == NULL){
+    return NULL;
+  }
+  
+  toInsert->user_data = user_data;
+  if(node == NULL){ //insert node to begin of list
+  struct llnode *temp = list->first;
+  toInsert->next = temp;
+  toInsert->prev = NULL;
+  list->first = toInsert;
+  if(list->last == NULL){
+      list->last = toInsert;
+      //list->first->next = NULL;
+    
+  }
+  return toInsert;
+  }
+  else if(node == list->last){
+     struct llnode *temp = malloc(sizeof(struct llnode));
+      temp = list->last->prev;
+      if(temp != NULL){
+        temp->next = toInsert;
+      }
+      list->last->prev = toInsert;
+      toInsert->next = list->last;
+      toInsert->prev = temp;
+      
+
+     return toInsert;
+    }
+  
+    else{ //else insert before node  node->prev should equal toInsert node
+  struct llnode *temp = node->prev;
+  temp->next = toInsert;
+  node->prev = toInsert;
+  toInsert->next = node;
+  toInsert->prev = temp;
+
+
+  }
+  return toInsert;
 }
 
 /* create and return an `llnode` that stores `user_data` */
@@ -94,6 +294,16 @@ struct llnode *dbll_insert_before(struct dbll *list, struct llnode *node, void *
 /* return NULL if memory could not be allocated */
 /* this function is a convenience function and can use the dbll_insert_after function */
 struct llnode *dbll_append(struct dbll *list, void *user_data)
-{
-  return NULL;
+{/* 
+  struct llnode *toAppend = (struct llnode*)malloc(sizeof(struct llnode));
+  if(toAppend == NULL){
+    return NULL;
+
+  }
+  toAppend->user_data = user_data;
+  toAppend->next = NULL;
+  toAppend->prev = list->last;
+  list-> */
+  return dbll_insert_after(list,NULL,user_data);
+ 
 }
