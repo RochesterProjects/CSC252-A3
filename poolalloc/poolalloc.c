@@ -11,18 +11,25 @@
 /* use malloc() or calloc() to obtain this initial pool of memory from the system */
 struct memory_pool *mpool_create(size_t size)
 {
-
+  struct memory_pool *mpool = (struct memory_pool *)malloc(sizeof(struct memory_pool ));
+  if(mpool == NULL){
+    return NULL;
+  }
   /* set start to memory obtained from malloc */
+  mpool->start = malloc(size * sizeof(int));
   /* set size to size */
-
+  mpool->size = size;
   /* create a doubly-linked list to track allocations */
+  mpool->alloc_list = dbll_create();
+
   /* create a doubly-linked list to track free blocks */
+  mpool->free_list = dbll_create();
 
   /* create a free block of memory for the entire pool and place it on the free_list */
-
+  dbll_append(mpool->free_list, mem_block)''
   /* return memory pool object */
+  return mpool;
 
-  return NULL;
 }
 
 /* ``destroy'' the memory pool by freeing it and all associated data structures */
