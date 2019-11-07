@@ -26,7 +26,9 @@ struct memory_pool *mpool_create(size_t size)
   mpool->free_list = dbll_create();
 
   /* create a free block of memory for the entire pool and place it on the free_list */
-  dbll_append(mpool->free_list, mem_block)''
+  struct alloc_info *mem_block = (struct alloc_info*) malloc(sizeof(struct alloc_info));
+  mem_block->size = size;
+  dbll_append(mpool->free_list, mem_block);
   /* return memory pool object */
   return mpool;
 
@@ -38,9 +40,15 @@ void mpool_destroy(struct memory_pool *p)
 {
   /* make sure the allocated list is empty (i.e. everything has been freed) */
   /* free the alloc_list dbll */
+  dbll_free(p->alloc_list);
   /* free the free_list dbll  */
+  dbll_free(p->free_list);
+  
   /* free the memory pool structure */
+  free(p);
 }
+
+
 
 
 /* allocate a chunk of memory out of the free pool */
