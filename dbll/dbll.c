@@ -173,18 +173,28 @@ struct llnode *dbll_insert_after(struct dbll *list, struct llnode *node, void *u
   toInsert->user_data = user_data;
 
   if(node != NULL){
-    struct llnode *pnext = node->next;
+    struct llnode *pnext = malloc(sizeof(struct llnode));
+    pnext = node->next;
+    if(node->next != NULL){
+      pnext->prev = toInsert;
+    }
     toInsert->next = pnext;
     node->next = toInsert;
     toInsert->prev = node;
-    if(pnext == NULL){
-      list->last = toInsert;
-    }}else{
-      list->last = toInsert;
-      if(list->first == NULL){
-        list->first = toInsert;
-      }
     }
+  else{
+  toInsert->user_data = user_data;
+    toInsert->next = NULL;
+    toInsert->prev = list->last;
+    if(list->last != NULL){
+      list->last->next = toInsert;
+    }
+    list->last = toInsert;
+    if(list->first == NULL){
+      list->first = toInsert;
+    }    
+  }
+   
   
   return toInsert;
 }
@@ -203,18 +213,26 @@ struct llnode *dbll_insert_before(struct dbll *list, struct llnode *node, void *
   toInsert->user_data = user_data;
 
   if(node != NULL){
-    struct llnode *pprev = node->prev;
+    struct llnode *pprev = malloc(sizeof(struct llnode));
+    pprev = node->prev;
+    if(pprev != NULL){
+      pprev->next = toInsert;
+    }
     toInsert->prev = pprev;
     node->prev = toInsert;
     toInsert->next = node;
 
-    if(pprev == NULL){list->first = toInsert;}
+    if(pprev == NULL){
+      list->first = toInsert;}
   }else{
+      struct llnode *temp = list->first;
+      toInsert->next = temp;
+      toInsert->prev = NULL;
       list->first = toInsert;
       if(list->last == NULL){
-        list->last = toInsert;
+          list->last = toInsert;
       }
-    }
+  }
   
  
   return toInsert;
