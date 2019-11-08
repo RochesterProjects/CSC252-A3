@@ -74,12 +74,19 @@ void *mpool_alloc(struct memory_pool *p, size_t size)
       align = 2;
       break;
     case 3:
+      align = 4;
     case 4:
       align = 4;
       break;
     case 5:
+      align = 8;
+      break;
     case 6:
+      align = 8;
+      break;
     case 7:
+      align = 8;
+      break;
     case 8:
       align = 8;
       break;
@@ -94,20 +101,22 @@ void *mpool_alloc(struct memory_pool *p, size_t size)
   /* there are many strategies you can use: first fit (the first block that fits),
    best fit (the smallest block that fits), etc. */
   struct llnode* block = NULL;
-  for (struct llnode* curr = p->free_list->first; curr != NULL; curr = curr->next) {
+  struct llnode* curr = p->free_list->first;
+  while (curr != NULL) {
     struct alloc_info* temp = curr->user_data;
     size_t start = temp->offset;
-    if (start % align != 0)
+    if (start % align != 0){
       start = (start / align + 1) * align;
+    }
     if (temp->offset + temp->size >= start + size) {
       block = curr;
       break;
     }
+  curr = curr->next;
   }
 
   /* if no suitable block can be found, return NULL */
-  if (block == NULL)
-    return NULL;
+  if (block == NULL){return NULL;}
   struct alloc_info* block_data = block->user_data;
 
   /* if found, create an alloc_info block, store start of new region
@@ -133,8 +142,9 @@ void *mpool_alloc(struct memory_pool *p, size_t size)
 
   block_data->offset += to_add->size;
   block_data->size -= to_add->size;
-  if (block_data->size == 0) 
+  if (block_data->size == 0){
     dbll_remove(p->free_list, block);
+  }
 
   /* add the new alloc_info block to the memory pool's allocated
    list */
@@ -154,7 +164,8 @@ void mpool_free(struct memory_pool *p, void *addr)
 {
   /* search the alloc_list for the to_add */
   struct llnode* block = NULL;
-  for (struct llnode* curr = p->alloc_list->first; curr != NULL; curr = curr->next) 
+  struct llnode* curr = p->alloc_list->first;
+  while (curr != NULL){ 
     if (((struct alloc_info*) curr->user_data)->offset + p->start == addr) {
       block = curr;
       break;
@@ -162,6 +173,8 @@ void mpool_free(struct memory_pool *p, void *addr)
 
   if(block == NULL){
     return;
+  }
+   curr = curr->next;
   }
 
   /* move it to the free_list */
@@ -171,16 +184,21 @@ void mpool_free(struct memory_pool *p, void *addr)
 
   // Add to free_list
   block = NULL;
-  for (struct llnode* curr = p->free_list->first; curr != NULL; curr = curr->next) 
+  curr = p->free_list->first;
+  while( curr != NULL){ 
     if (((struct alloc_info*) curr->user_data)->offset > (size_t) addr - (size_t) p->start) {
       block = curr;
       break;
     }
+    curr = curr->next;
+  }
   
-  if (block != NULL)
+  if (block != NULL){
     block = dbll_insert_before(p->free_list, block, data);
-  else 
+  }
+  else {
     block = dbll_append(p->free_list, data);
+  }
 
   /* coalesce the free_list */
 
